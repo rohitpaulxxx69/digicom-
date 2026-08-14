@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment 3: Sampling, Aliasing and Reconstruction - Digital Communication Lab</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Google Fonts for professional technical dashboard look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="lab-container">
+    <!-- Header -->
+    <header class="lab-header">
+      <div class="header-left">
+        <span class="lab-badge">EXPERIMENT 3</span>
+        <h1>Sampling, Aliasing &amp; Reconstruction</h1>
+        <p class="subtitle">Interactive Digital Communication Laboratory Simulation</p>
+      </div>
+      <div class="header-right">
+        <div id="connection-status" class="status-indicator-pill safe">
+          <span class="pulse-dot"></span>
+          <span class="status-text">SYSTEM ONLINE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <div class="lab-grid">
+      
+      <!-- LEFT COLUMN: CONTROLS -->
+      <aside class="control-panel">
+        
+        <!-- Quick Test Station -->
+        <div class="control-card highlight-card">
+          <h2>Quick Preset Tests</h2>
+          <p class="card-desc">Instantly configure parameters to the laboratory-required cases.</p>
+          <div class="preset-buttons">
+            <button id="btn-preset-above" class="btn btn-preset" title="Sampling above the Nyquist rate (No Aliasing)">
+              <strong>Case A: fs &gt; 2fmax</strong>
+              <span>Above Nyquist (400 Hz)</span>
+            </button>
+            <button id="btn-preset-at" class="btn btn-preset" title="Sampling exactly at the Nyquist rate">
+              <strong>Case B: fs = 2fmax</strong>
+              <span>At Nyquist (240 Hz)</span>
+            </button>
+            <button id="btn-preset-below" class="btn btn-preset" title="Sampling below the Nyquist rate (Aliasing)">
+              <strong>Case C: fs &lt; 2fmax</strong>
+              <span>Below Nyquist (180 Hz)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Signal Source Parameters -->
+        <div class="control-card">
+          <h2>1. Signal Source Parameters</h2>
+          <p class="card-formula">x(t) = A₁ sin(2πf₁t) + A₂ sin(2πf₂t)</p>
+          
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-f1">Frequency 1 (f₁)</label>
+              <span class="unit-readout"><span id="readout-f1">50</span> Hz</span>
+            </div>
+            <input type="range" id="input-f1" min="10" max="100" step="5" value="50">
+          </div>
+
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-a1">Amplitude 1 (A₁)</label>
+              <span class="unit-readout" id="readout-a1">1.0</span>
+            </div>
+            <input type="range" id="input-a1" min="0.1" max="2.0" step="0.1" value="1.0">
+          </div>
+
+          <hr class="card-divider">
+
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-f2">Frequency 2 (f₂)</label>
+              <span class="unit-readout"><span id="readout-f2">120</span> Hz</span>
+            </div>
+            <input type="range" id="input-f2" min="60" max="200" step="5" value="120">
+          </div>
+
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-a2">Amplitude 2 (A₂)</label>
+              <span class="unit-readout" id="readout-a2">0.5</span>
+            </div>
+            <input type="range" id="input-a2" min="0.0" max="2.0" step="0.1" value="0.5">
+          </div>
+        </div>
+
+        <!-- Sampling Parameters -->
+        <div class="control-card">
+          <h2>2. Physical Sampling Parameters</h2>
+          
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-fs">Sampling Frequency (fs)</label>
+              <span class="unit-readout highlighted-readout"><span id="readout-fs">400</span> Hz</span>
+            </div>
+            <input type="range" id="input-fs" min="20" max="500" step="5" value="400">
+            <div class="quick-fs-entry">
+              <input type="number" id="num-fs" min="20" max="500" step="1" value="400" class="numeric-input">
+              <span class="input-label-inline">Hz (Manual Entry)</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <div class="input-header">
+              <label for="input-duration">Sampling Duration (T_dur)</label>
+              <span class="unit-readout"><span id="readout-duration">0.10</span> s</span>
+            </div>
+            <input type="range" id="input-duration" min="0.02" max="0.30" step="0.01" value="0.10">
+          </div>
+        </div>
+
+        <!-- Advanced Simulation Settings -->
+        <div class="control-card collapsible-card">
+          <div class="collapsible-header" id="adv-settings-toggle">
+            <h2>3. Advanced Simulator Settings</h2>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="collapsible-content" id="adv-settings-content">
+            <div class="input-group">
+              <div class="input-header">
+                <label for="input-plot-res">Plotting Resolution</label>
+                <span class="unit-readout"><span id="readout-plot-res">10000</span> Hz</span>
+              </div>
+              <input type="range" id="input-plot-res" min="5000" max="20000" step="1000" value="10000">
+              <p class="help-text">Represents the fine grid used to approximate continuous time.</p>
+            </div>
+            
+            <div class="input-group">
+              <div class="input-header">
+                <label for="input-sinc-window">Sinc Window Cutoff</label>
+                <span class="unit-readout">&plusmn; <span id="readout-sinc-window">24</span> samples</span>
+              </div>
+              <input type="range" id="input-sinc-window" min="5" max="50" step="1" value="24">
+              <p class="help-text">Controls reconstruction window radius. A finite window mimics practical filter truncation.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation Actions -->
+        <div class="action-card">
+          <button id="btn-run" class="btn btn-primary" title="Execute full DSP simulation pipeline">
+            <span class="btn-text">RUN SIMULATION PIPELINE</span>
+            <span class="spinner" id="sim-spinner"></span>
+          </button>
+          <div class="export-buttons">
+            <button id="btn-export-csv" class="btn btn-secondary" title="Export plotting coordinates to CSV">
+              Export CSV Data
+            </button>
+            <button id="btn-export-report" class="btn btn-secondary" title="Generate and export full experiment report">
+              Export Lab Report
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER / RIGHT COLUMNS: GRAPHICAL SCREENS AND DATA READOUTS -->
+      <main class="dashboard-content">
+        
+        <!-- Status Banner Area -->
+        <section id="status-card" class="status-banner safe-banner">
+          <div class="status-icon-wrapper">
+            <svg class="status-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+              <path class="safe-path" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path class="warning-path" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div class="status-details">
+            <h3 id="status-title">STATUS: SAFE / NO ALIASING</h3>
+            <p id="status-explanation">Sampling frequency (400 Hz) exceeds the Nyquist rate (240 Hz). The signal can be reconstructed perfectly without spectral overlap.</p>
+          </div>
+        </section>
+
+        <!-- Oscilloscopes Container -->
+        <div class="visualizer-grid">
+          
+          <!-- TIME DOMAIN SCREEN -->
+          <div class="screen-card">
+            <div class="screen-header">
+              <div class="screen-title">
+                <span class="screen-dot green-pulse"></span>
+                <h3>TIME-DOMAIN OSCILLOSCOPE</h3>
+              </div>
+              <div class="canvas-controls">
+                <button id="btn-zoom-in-t" class="btn-icon" title="Zoom In X-Axis">+</button>
+                <button id="btn-zoom-out-t" class="btn-icon" title="Zoom Out X-Axis">-</button>
+                <button id="btn-reset-t" class="btn-icon text-btn" title="Reset Zoom">RESET</button>
+              </div>
+            </div>
+            
+            <div class="canvas-wrapper">
+              <canvas id="timeCanvas"></canvas>
+              <div id="time-hover-readout" class="graph-hover-readout"></div>
+            </div>
+            
+            <!-- Signal Selector / Legend -->
+            <div class="graph-legend">
+              <label class="legend-item" style="--sig-color: var(--color-sig-orig)">
+                <input type="checkbox" id="chk-orig" checked>
+                <span class="legend-box"></span>
+                <span class="legend-label">Original Signal x(t)</span>
+              </label>
+              <label class="legend-item" style="--sig-color: var(--color-sig-sampled)">
+                <input type="checkbox" id="chk-sampled" checked>
+                <span class="legend-box"></span>
+                <span class="legend-label">Sampled Points x[n]</span>
+              </label>
+              <label class="legend-item" style="--sig-color: var(--color-sig-recon)">
+                <input type="checkbox" id="chk-recon" checked>
+                <span class="legend-box"></span>
+                <span class="legend-label">Sinc Reconstructed x_r(t)</span>
+              </label>
+              <label class="legend-item" style="--sig-color: var(--color-sig-error)">
+                <input type="checkbox" id="chk-error">
+                <span class="legend-box"></span>
+                <span class="legend-label">Reconstruction Error e(t)</span>
+              </label>
+            </div>
+            <p class="interaction-tip">💡 Drag to Pan, Scroll to Zoom, Hover to inspect values.</p>
+          </div>
+
+          <!-- FREQUENCY DOMAIN SCREEN -->
+          <div class="screen-card">
+            <div class="screen-header">
+              <div class="screen-title">
+                <span class="screen-dot green-pulse"></span>
+                <h3>FREQUENCY-DOMAIN SPECTRUM ANALYZER</h3>
+              </div>
+              <div class="canvas-controls">
+                <button id="btn-zoom-in-f" class="btn-icon" title="Zoom In Freq">+</button>
+                <button id="btn-zoom-out-f" class="btn-icon" title="Zoom Out Freq">-</button>
+                <button id="btn-reset-f" class="btn-icon text-btn" title="Reset Zoom">RESET</button>
+              </div>
+            </div>
+            
+            <div class="canvas-wrapper">
+              <canvas id="freqCanvas"></canvas>
+              <div id="freq-hover-readout" class="graph-hover-readout"></div>
+            </div>
+
+            <div class="graph-legend justify-between">
+              <div class="flex gap-4">
+                <span class="legend-item-static" style="--sig-color: var(--color-sig-orig)">
+                  <span class="legend-box-static"></span> Original Spectrum
+                </span>
+                <span class="legend-item-static" style="--sig-color: var(--color-sig-sampled-spec)">
+                  <span class="legend-box-static dashed"></span> Sampled (Replicas)
+                </span>
+                <span class="legend-item-static" style="--sig-color: var(--color-sig-recon)">
+                  <span class="legend-box-static"></span> Reconstructed Spectrum
+                </span>
+              </div>
+              <span class="legend-item-static text-gray" style="--sig-color: rgba(255,255,255,0.1)">
+                <span class="legend-box-static fill"></span> Nyquist Band [&plusmn;fs/2]
+              </span>
+            </div>
+            <p class="interaction-tip">💡 Spectrum shows replicas spaced by fs. Shaded area represents reconstruction filter passband.</p>
+          </div>
+
+        </div>
+
+        <!-- ANALYSIS AND MATHEMATICS SECTION -->
+        <section class="readouts-grid">
+          
+          <!-- MATHEMATICAL STATS READOUT -->
+          <div class="data-card">
+            <h3>Calculated Signal Properties</h3>
+            <div class="stats-table">
+              <div class="stat-row">
+                <span class="stat-label">Maximum Signal Frequency (fmax)</span>
+                <span class="stat-value" id="val-fmax">120 Hz</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Required Nyquist Rate (2fmax)</span>
+                <span class="stat-value highlighted-value" id="val-nyquist-rate">240 Hz</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Physical Sampling Frequency (fs)</span>
+                <span class="stat-value" id="val-fs-readout">400 Hz</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Sampling Period (Ts = 1/fs)</span>
+                <span class="stat-value font-mono" id="val-ts">2.500 ms</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Number of Samples Taken (Ns)</span>
+                <span class="stat-value" id="val-ns">40 samples</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ALIASING THEORY CHECK CARD -->
+          <div class="data-card">
+            <h3>Aliasing Verification Check</h3>
+            <div id="alias-calc-panel" class="alias-theory-panel">
+              <!-- Content dynamically generated by JavaScript -->
+              <p>Calculating folded spectrum...</p>
+            </div>
+          </div>
+
+          <!-- RECONSTRUCTION ERROR CARD -->
+          <div class="data-card">
+            <h3>Reconstruction Error Analysis</h3>
+            <div class="error-metrics">
+              <div class="error-metric-box">
+                <span class="metric-title">Mean Squared Error (MSE)</span>
+                <span class="metric-value font-mono" id="err-mse">0.0000</span>
+                <div class="metric-meter"><div class="meter-bar" id="meter-mse"></div></div>
+              </div>
+              <div class="error-metric-box">
+                <span class="metric-title">Root Mean Squared Error (RMSE)</span>
+                <span class="metric-value font-mono" id="err-rmse">0.0000</span>
+                <div class="metric-meter"><div class="meter-bar" id="meter-rmse"></div></div>
+              </div>
+              <div class="error-metric-box">
+                <span class="metric-title">Relative Error (%)</span>
+                <span class="metric-value font-mono" id="err-relative">0.00%</span>
+                <div class="metric-meter"><div class="meter-bar" id="meter-relative"></div></div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- COMPARISON DASHBOARD -->
+        <section class="dashboard-section">
+          <h2>Comparison Dashboard</h2>
+          <p class="section-desc">Recordings for the three primary test cases. Run presets to populate or click the button to save the current custom configuration.</p>
+          
+          <div class="table-container">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>Parameters &amp; Metrics</th>
+                  <th>Test Case A: Above Nyquist</th>
+                  <th>Test Case B: At Nyquist</th>
+                  <th>Test Case C: Below Nyquist</th>
+                  <th class="current-col">Current Setup</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Sampling Frequency (fs)</strong></td>
+                  <td id="cell-a-fs">400 Hz</td>
+                  <td id="cell-b-fs">240 Hz</td>
+                  <td id="cell-c-fs">180 Hz</td>
+                  <td id="cell-curr-fs" class="current-col font-mono">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Nyquist Rate (2fmax)</strong></td>
+                  <td id="cell-a-nyq">240 Hz</td>
+                  <td id="cell-b-nyq">240 Hz</td>
+                  <td id="cell-c-nyq">240 Hz</td>
+                  <td id="cell-curr-nyq" class="current-col font-mono">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Condition</strong></td>
+                  <td id="cell-a-cond" class="text-safe">fs &gt; 2fmax</td>
+                  <td id="cell-b-cond" class="text-warn">fs = 2fmax</td>
+                  <td id="cell-c-cond" class="text-danger">fs &lt; 2fmax</td>
+                  <td id="cell-curr-cond" class="current-col">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Aliasing Expected?</strong></td>
+                  <td id="cell-a-alias">No</td>
+                  <td id="cell-b-alias">No (Theoretical Limit)</td>
+                  <td id="cell-c-alias" class="text-danger">Yes</td>
+                  <td id="cell-curr-alias" class="current-col">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Calculated Alias Frequency (f2)</strong></td>
+                  <td id="cell-a-alias-freq">None</td>
+                  <td id="cell-b-alias-freq">None</td>
+                  <td id="cell-c-alias-freq">60 Hz</td>
+                  <td id="cell-curr-alias-freq" class="current-col font-mono">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Observed Spectral Peak (f2)</strong></td>
+                  <td id="cell-a-obs-freq">120 Hz</td>
+                  <td id="cell-b-obs-freq">120 Hz</td>
+                  <td id="cell-c-obs-freq" class="text-danger">60 Hz</td>
+                  <td id="cell-curr-obs-freq" class="current-col font-mono">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Mean Squared Error (MSE)</strong></td>
+                  <td id="cell-a-mse" class="font-mono">-</td>
+                  <td id="cell-b-mse" class="font-mono">-</td>
+                  <td id="cell-c-mse" class="font-mono">-</td>
+                  <td id="cell-curr-mse" class="current-col font-mono">-</td>
+                </tr>
+                <tr>
+                  <td><strong>Root Mean Squared Error (RMSE)</strong></td>
+                  <td id="cell-a-rmse" class="font-mono">-</td>
+                  <td id="cell-b-rmse" class="font-mono">-</td>
+                  <td id="cell-c-rmse" class="font-mono">-</td>
+                  <td id="cell-curr-rmse" class="current-col font-mono">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-actions">
+            <button id="btn-save-current" class="btn btn-secondary">Save Current Parameters to Column</button>
+            <span class="help-text">Clicking a Quick Preset Test automatically updates the corresponding column with latest simulation runs.</span>
+          </div>
+        </section>
+
+        <!-- DYNAMIC OBSERVATION & INTERPRETATION REPORTS -->
+        <section class="dashboard-section">
+          <h2>Observation &amp; Interpretation</h2>
+          <p class="section-desc">Analysis of the experimental result compared to sampling theory, detailing verification and diagnostics.</p>
+          
+          <div class="observations-container">
+            
+            <div id="obs-card-above" class="observation-card">
+              <div class="obs-header">
+                <h3>Case A — Proper Sampling (fs &gt; 2fmax)</h3>
+                <span class="obs-badge safe">SAFE</span>
+              </div>
+              <div class="obs-content">
+                <div class="obs-section">
+                  <h4>Expected Physical Effect:</h4>
+                  <p>No aliasing. The sampling frequency fulfills the Nyquist criteria. Sinc reconstruction is expected to accurately recreate the original continuous two-tone signal with minor errors limited to boundary edge truncation.</p>
+                </div>
+                <div class="obs-section">
+                  <h4>Observed Result:</h4>
+                  <p id="obs-res-above">The reconstructed wave closely matches the original. The frequency spectrum displays distinct impulses at 50 Hz and 120 Hz, matching the signal source.</p>
+                </div>
+                <div class="obs-status theory-agreed" id="obs-status-above">
+                  <span class="status-icon">✓</span> Observation agrees with sampling theory
+                </div>
+                <div class="obs-section diagnostic" id="obs-diag-above">
+                  <h4>Diagnostic Information &amp; Checks:</h4>
+                  <p>If small reconstruction errors occur at the edges, they are due to the **finite sinc reconstruction window**. Increase the *Sinc Window Cutoff* or the *Sampling Duration* to observe if the error approaches zero.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="obs-card-at" class="observation-card">
+              <div class="obs-header">
+                <h3>Case B — Nyquist Boundary (fs = 2fmax)</h3>
+                <span class="obs-badge warn">LIMIT</span>
+              </div>
+              <div class="obs-content">
+                <div class="obs-section">
+                  <h4>Expected Physical Effect:</h4>
+                  <p>Sampling occurs exactly at the theoretical limit. In ideal systems with infinite samples, reconstruction is possible. However, in practical finite-time systems, phase offsets can cause significant amplitude attenuation or loss of the critical 120 Hz component (e.g., if sampled at zero-crossings).</p>
+                </div>
+                <div class="obs-section">
+                  <h4>Observed Result:</h4>
+                  <p id="obs-res-at">Reconstruction displays the envelope but may experience phase shift errors or amplitude decay depending on sample distribution. The 120 Hz tone lies exactly at the Nyquist interval border.</p>
+                </div>
+                <div class="obs-status theory-agreed" id="obs-status-at">
+                  <span class="status-icon">✓</span> Observation agrees with sampling theory
+                </div>
+                <div class="obs-section diagnostic" id="obs-diag-at">
+                  <h4>Diagnostic Information &amp; Checks:</h4>
+                  <p>Nyquist-rate sampling is unstable in practice. Notice that any slight phase shift can result in incorrect values. In practical hardware, anti-aliasing filters require a guard band; thus, communication systems use oversampling (\(fs &gt; 2.2 \times fmax\)).</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="obs-card-below" class="observation-card">
+              <div class="obs-header">
+                <h3>Case C — Undersampling (fs &lt; 2fmax)</h3>
+                <span class="obs-badge danger">ALIASING</span>
+              </div>
+              <div class="obs-content">
+                <div class="obs-section">
+                  <h4>Expected Physical Effect:</h4>
+                  <p>Aliasing occurs. The higher-frequency component (120 Hz) folds back across the Nyquist frequency limit (\(fs/2 = 90\) Hz) and appears as a lower-frequency ghost tone. Mathematical folding: \(|120 - 180| = 60\) Hz. The reconstructed wave will look like a mixture of 50 Hz and 60 Hz waves.</p>
+                </div>
+                <div class="obs-section">
+                  <h4>Observed Result:</h4>
+                  <p id="obs-res-below">The reconstructed signal is clearly distorted. The 120 Hz component is replaced by a 60 Hz tone in both the time waveform and spectrum. The reconstruction error (MSE) is high.</p>
+                </div>
+                <div class="obs-status theory-agreed" id="obs-status-below">
+                  <span class="status-icon">✓</span> Observation agrees with sampling theory
+                </div>
+                <div class="obs-section diagnostic" id="obs-diag-below">
+                  <h4>Diagnostic Information &amp; Checks:</h4>
+                  <p>Aliasing is irreversible once it occurs in samples. The sinc interpolator reconstructs based on baseband samples and has no memory of the original high frequency. The diagnostic test to solve this is to place a physical **analog anti-aliasing low-pass filter** before sampling or increase \(fs\) above 240 Hz.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- VIVA QUICK CHECK ACCORDION -->
+        <section class="dashboard-section">
+          <h2>Viva Quick Check - Interactive Laboratory Q&amp;A</h2>
+          <p class="section-desc">Click on the cards to prepare for laboratory examinations and vivas based on this experiment.</p>
+          
+          <div class="viva-accordion">
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>1. What is the fundamental statement of the Nyquist-Shannon Sampling Theorem?</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p>The theorem states that a continuous-time signal \(x(t)\) which contains no frequency components higher than \(fmax\) Hz can be reconstructed completely and uniquely from a set of its samples taken at a uniform rate \(fs\) if and only if:
+                \[fs \ge 2 fmax\]
+                Where \(2fmax\) is termed the <strong>Nyquist rate</strong>, and \(fs/2\) is the <strong>Nyquist frequency</strong>.</p>
+              </div>
+            </div>
+
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>2. Why does aliasing occur mathematically when fs &lt; 2fmax?</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p>In the frequency domain, sampling a signal multiplies it by an impulse train, which corresponds to convolving the signal's spectrum with impulses at multiples of \(fs\). This creates periodic replicas of the spectrum spaced by \(fs\):
+                \[X_s(f) = fs \sum_{k=-\infty}^{\infty} X(f - k fs)\]
+                When \(fs < 2fmax\), these replicas overlap. This spectral overlap makes it impossible to isolate the original baseband spectrum using a low-pass filter, causing higher frequencies to "fold" into lower frequencies.</p>
+              </div>
+            </div>
+
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>3. Explain the difference between "Sampling Rate" (fs) and "Plotting Resolution" in this simulator.</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p><strong>Sampling Rate (fs)</strong> is the physical frequency at which discrete samples are captured from the analog signal. It determines the mathematical boundaries of reconstruction and aliasing.
+                <br><br>
+                <strong>Plotting Resolution</strong> is the density of the time grid used by the computer to draw lines that "look continuous" on your monitor. If we plotted the reference signal with a resolution of only \(fs\), it would look jagged and appear to have alias effects on screen, even if the math was correct. Thus, a very fine grid (e.g., 10 kHz) is used to draw the continuous-time signals, while the physical sampling process evaluates the signal only at intervals of \(1/fs\).</p>
+              </div>
+            </div>
+
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>4. How does Whittaker-Shannon (sinc) interpolation reconstruct the continuous signal?</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p>Ideal reconstruction is achieved by passing the sampled impulse train through an ideal brick-wall low-pass filter with cutoff frequency \(fc = fs/2\). The impulse response of such a filter is a sinc function:
+                \[h(t) = \operatorname{sinc}(t/Ts) = \frac{\sin(\pi t / Ts)}{\pi t / Ts}\]
+                Convolving the samples with this impulse response results in:
+                \[x_r(t) = \sum_{n=-\infty}^{\infty} x[n] \operatorname{sinc}\left(\frac{t - nTs}{Ts}\right)\]
+                Each sample point scales a sinc function centered at that sample's time, and the sum of all these sinc functions reconstructs the original continuous signal perfectly (assuming no aliasing and infinite samples).</p>
+              </div>
+            </div>
+
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>5. Why is there still a tiny reconstruction error (MSE &gt; 0) in the proper sampling case (fs = 400 Hz)?</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p>The Whittaker-Shannon interpolation formula is mathematically perfect only when summing over an infinite range of samples (\(n\) from \(-\infty\) to \(\infty\)).
+                <br><br>
+                In a real laboratory simulation, we only capture samples over a finite duration (e.g. \(0.1\) s), meaning the summation is truncated. At the edges of the simulation window, the lack of "future" and "past" samples to contribute to the sinc sum creates a truncation error (often called edge effects or Gibbs-like ripple). This is a physical constraint of all finite-time real-world DSP systems.</p>
+              </div>
+            </div>
+
+            <div class="viva-item">
+              <button class="viva-question">
+                <span>6. What is the role of an analog anti-aliasing filter in practical communication systems?</span>
+                <span class="icon">+</span>
+              </button>
+              <div class="viva-answer">
+                <p>An anti-aliasing filter is a continuous-time low-pass filter placed <em>before</em> the analog-to-digital converter (ADC). It filters out all signal and noise components above the Nyquist frequency (\(fs/2\)).
+                <br><br>
+                This ensures that when the signal is sampled at \(fs\), no spectral content exists that could fold into the baseband. Once aliasing occurs in the digital samples, it is mathematically impossible to distinguish an aliased low-frequency component from an original low-frequency component, making filtering prior to sampling essential.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- COLLAPSIBLE EDUCATIONAL THEORY PANEL -->
+        <section class="dashboard-section collapsible-section">
+          <div class="section-collapsible-header" id="theory-section-toggle">
+            <h2>Educational Theory &amp; Formulas</h2>
+            <span class="toggle-icon">▼</span>
+          </div>
+          
+          <div class="section-collapsible-content" id="theory-section-content">
+            <div class="theory-grid">
+              <div class="theory-block">
+                <h3>1. Mathematical Formulation of Aliasing</h3>
+                <p>When a signal component at frequency \(f\) is sampled at rate \(fs\), it is mixed with all integer harmonics of the sampling rate. The resulting discrete-time frequency components are:
+                \[f_{discrete} = |f - k \cdot fs| \quad \text{for } k \in \mathbb{Z}\]
+                The principal alias observed in the baseband is the one where \(k\) places the frequency within the Nyquist interval:
+                \[0 \le f_{alias} \le \frac{fs}{2}\]</p>
+                <p><strong>Example (Undersampled Case):</strong>
+                With \(f = 120\) Hz and \(fs = 180\) Hz:
+                \[f_{alias} = |120 - 1 \times 180| = |-60| = 60\text{ Hz}\]
+                This 60 Hz tone is indistinguishable from an original 60 Hz sine wave in the sampled data.</p>
+              </div>
+              <div class="theory-block">
+                <h3>2. Sinc Interpolation Mechanism</h3>
+                <p>The sinc function \(\operatorname{sinc}(u) = \frac{\sin(\pi u)}{\pi u}\) acts as a mathematical interpolation weight. At any sampling instant \(t_n = n Ts\), the sinc function is exactly \(1\), and it is exactly \(0\) at all other sampling instants.
+                <br><br>
+                This property guarantees that the reconstructed signal \(x_r(t)\) passes exactly through the sampled points:
+                \[x_r(n Ts) = x[n]\]
+                Between sample points, the overlapping wings of all sinc functions sum up to recreate the smooth curves of the continuous signal.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="lab-footer">
+      <p>Digital Communication Laboratory &copy; 2026 — Designed for Educational Visualization &amp; Signal Analysis</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
